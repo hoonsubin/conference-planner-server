@@ -3,21 +3,62 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-
-console.log("Hello from Functions!")
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import * as perpApi from "./services/index.ts";
 
 Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
-  }
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*", //todo: change to the app's deploy domain
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+  try {
+    const apiKey = Deno.env.get("PERPLEXITY_API_KEY");
+    if (!apiKey) {
+      throw new Error("Could not find the Perplexity API key!");
+    }
+
+    const api = perpApi.perplexityApiInst(apiKey);
+
+    if (req.method === "GET") {
+      // we simulate an endpoint
+      const endpoint = req.url.split('/').at(-1)
+      switch (endpoint) {
+        case 'events':
+          return new Response("world", { headers: corsHeaders });
+        case 'flights':
+          return new Response("hello", { headers: corsHeaders });
+        default:
+          return new Response(JSON.stringify({error: `Unknown request for ${endpoint}`}), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+      }
+      
+    }
+
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { headers: corsHeaders });
+    }
+
+    const { name } = await req.json();
+    const data = {
+      message: `Hello ${name}!`,
+    };
+
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+  } catch (e: any) {
+    console.error(e);
+    return new Response(JSON.stringify({error: e.message}), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
 
 /* To invoke locally:
 

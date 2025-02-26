@@ -102,7 +102,7 @@ file_size_limit = "50MiB"
 # objects_path = "./images"
 
 [auth]
-enabled = true
+enabled = false
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://127.0.0.1:3000"
@@ -274,6 +274,17 @@ inspector_port = 8083
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/MY_FUNCTION_NAME/*.html" ]
+
+[functions.conf-travel-fetch]
+enabled = true
+verify_jwt = false
+#import_map = "./functions/MY_FUNCTION_NAME/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/MY_FUNCTION_NAME/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+#static_files = [ "./functions/MY_FUNCTION_NAME/*.html" ]
 
 [analytics]
 enabled = true
