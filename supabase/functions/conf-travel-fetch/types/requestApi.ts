@@ -1,7 +1,7 @@
 import { z } from "npm:zod";
 
 export const ConferenceEventFetchSchema = z.object({
-  eventTags: z.string().min(3),
+  eventTags: z.string(),
   city: z.string(),
   country: z.string(),
   fromWhen: z.optional(z.string().datetime()),

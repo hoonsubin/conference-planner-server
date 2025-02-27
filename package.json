@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "serve": "supabase functions serve perplexity-proxy --env-file .env.local",
-    "deploy": "supabase functions deploy"
+    "deploy": "supabase functions deploy --no-verify-jwt"
   },
   "dependencies": {
     "axios": "^1.8.1",
