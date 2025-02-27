@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
           validatedEventReq.eventTags,
           validatedEventReq.city,
           validatedEventReq.country,
-          validatedEventReq.fromWhen,
+          validatedEventReq.fromWhen, // ISO 8601
         );
 
         return new Response(
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
           validatedFlightReq.conferenceCountry,
           validatedFlightReq.departCity,
           validatedFlightReq.departCountry,
-          validatedFlightReq.fromWhen,
+          validatedFlightReq.fromWhen, // ISO 8601
         );
 
         return new Response(JSON.stringify({ success: true, data: flightListRes }), {
