@@ -1,5 +1,5 @@
-import type { DateTime } from "luxon";
-import type { Location, PerplexityApiReq } from "../types/index.ts";
+import { DateTime } from "npm:luxon";
+import type { PerplexityApiReq } from "../types/index.ts";
 import { appConfig } from "../config/index.ts";
 
 const systemPrompt = `Only output the JSON list data without other messages.
@@ -31,11 +31,11 @@ export type FetchedEventListType = typeof eventListTypeDescriptor;
 
 const getEventListPrompt = (
   confType: string,
-  confLoc: Location,
-  startDate: DateTime
-) => `Create a list of conferences and events regarding ${confType} or other related topics near ${
-  confLoc.country
-}, ${confLoc.city}, ${confLoc.fullAddr} from ${startDate.toISO()} and onwards.
+  country: string,
+  city: string,
+  startDate: string,
+) =>
+  `Create a list of conferences and events regarding ${confType} or other related topics near ${country}, ${city} from ${startDate} and onwards.
 
 The output should be a JSON data with the following properties:
 ${JSON.stringify(eventListTypeDescriptor)}
@@ -65,19 +65,14 @@ const transportListTypeDescriptor = {
 export type FetchedTransportListType = typeof transportListTypeDescriptor;
 
 const getFlightOptionsPrompt = (
-  confLoc: Location,
-  startLoc: Location,
-  startDate: DateTime
-) => `I want to travel to ${confLoc.country}, ${confLoc.city}, ${
-  confLoc.fullAddr
-} from ${startLoc.country}, ${startLoc.city}, ${
-  startLoc.fullAddr
-} on ${startDate}.
-Search for all flight options departing from ${startLoc.country}, ${
-  startLoc.city
-}, ${
-  startLoc.fullAddr
-} around ${startDate} or other the closest time, including layovers.
+  destCity: string,
+  destCountry: string,
+  departCity: string,
+  departCountry: string,
+  startDate: string, // ISO datetime string
+) =>
+  `I want to travel to ${destCity}, ${destCountry} from ${departCity}, ${departCountry} on ${startDate}.
+Search for all flight options departing from ${departCity}, ${departCountry} around ${startDate} or other the closest time, including layovers.
 
 The output should be a structure JSON array string with the following properties per item:
 ${JSON.stringify(transportListTypeDescriptor)}
@@ -100,8 +95,9 @@ const perplexityApiReqTemplate: PerplexityApiReq = {
 
 export const fetchEventsApiPayload = (
   eventTags: string,
-  location: Location,
-  when: DateTime
+  country: string,
+  city: string,
+  when: string,
 ) => {
   return {
     ...perplexityApiReqTemplate,
@@ -112,16 +108,18 @@ export const fetchEventsApiPayload = (
       },
       {
         role: "user",
-        content: getEventListPrompt(eventTags, location, when),
+        content: getEventListPrompt(eventTags, country, city, when),
       },
     ],
   } as PerplexityApiReq;
 };
 
 export const fetchFlightsApiPayload = (
-  eventAddress: Location,
-  departLocation: Location,
-  arrivalTime: DateTime
+  destCity: string,
+  destCountry: string,
+  departCity: string,
+  departCountry: string,
+  arrivalTime: string, // ISO datetime string
 ) => {
   return {
     ...perplexityApiReqTemplate,
@@ -133,9 +131,11 @@ export const fetchFlightsApiPayload = (
       {
         role: "user",
         content: getFlightOptionsPrompt(
-          eventAddress,
-          departLocation,
-          arrivalTime
+          destCity,
+          destCountry,
+          departCity,
+          departCountry,
+          arrivalTime,
         ),
       },
     ],

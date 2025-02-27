@@ -5,8 +5,8 @@ export interface ConferenceEvent {
   name: string;
   thumbnail?: string;
   venueAddress: Location;
-  eventStartDate: number, // UTC in seconds
-  eventEndDate?: number, // UTC in seconds
+  eventStartDate: number, // epoch seconds
+  eventEndDate?: number, // epoch seconds
   eventDescription: string;
   eventUrl: string;
 }
@@ -31,8 +31,8 @@ export interface FlightItinerary {
   bookingLink: string;
   departAddress: Location;
   arrivalAddress: Location;
-  departTime: number, // UTC in seconds
-  arrivalTime: number, // UTC in seconds
+  departTime: number, // epoch seconds
+  arrivalTime: number, // epoch seconds
 }
 
 export interface AttendeeItinerary {

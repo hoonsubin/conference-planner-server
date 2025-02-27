@@ -5,11 +5,17 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import * as perpApi from "./services/index.ts";
+import {
+  ConferenceEventFetch,
+  ConferenceEventFetchSchema,
+  FlightItineraryFetch,
+  FlightItineraryFetchSchema,
+} from "./types/requestApi.ts";
 
 Deno.serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*", //todo: change to the app's deploy domain
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 
@@ -21,23 +27,61 @@ Deno.serve(async (req) => {
 
     const api = perpApi.perplexityApiInst(apiKey);
 
-    if (req.method === "GET") {
+    if (req.method === "POST") {
       // we simulate an endpoint
-      const endpoint = req.url.split('/').at(-1)
-      switch (endpoint) {
-        case 'events':
-          return new Response("world", { headers: corsHeaders });
-        case 'flights':
-          return new Response("hello", { headers: corsHeaders });
-        default:
-          return new Response(JSON.stringify({error: `Unknown request for ${endpoint}`}), {
+      const endpoint = req.url.split("/").at(-1);
+
+      const reqBody = await req.json();
+      console.log(`Received ${JSON.stringify(reqBody)}`);
+
+      if (endpoint === "events") {
+        const validatedEventReq: ConferenceEventFetch =
+          ConferenceEventFetchSchema.parse(reqBody);
+
+        const confListRes = await perpApi.fetchConferenceList(
+          api,
+          validatedEventReq.eventTags,
+          validatedEventReq.city,
+          validatedEventReq.country,
+          validatedEventReq.fromWhen,
+        );
+
+        return new Response(
+          JSON.stringify({ success: true, data: confListRes }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      } else if (endpoint === "flights") {
+        const validatedFlightReq: FlightItineraryFetch =
+          FlightItineraryFetchSchema.parse(reqBody);
+
+        const flightListRes = await perpApi.fetchFlightSchedule(
+          api,
+          validatedFlightReq.conferenceCity,
+          validatedFlightReq.conferenceCountry,
+          validatedFlightReq.departCity,
+          validatedFlightReq.departCountry,
+          validatedFlightReq.fromWhen,
+        );
+
+        return new Response(JSON.stringify({ success: true, data: flightListRes }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } else {
+        return new Response(
+          JSON.stringify({ error: `Unknown request for ${endpoint}` }),
+          {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+          },
+        );
       }
-      
     }
 
+    // heartbeat check
     if (req.method === "OPTIONS") {
       return new Response("ok", { headers: corsHeaders });
     }
@@ -50,10 +94,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (e: any) {
     console.error(e);
-    return new Response(JSON.stringify({error: e.message}), {
+    return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

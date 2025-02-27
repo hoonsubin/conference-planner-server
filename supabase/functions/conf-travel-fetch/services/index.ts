@@ -2,14 +2,12 @@ import * as llmPrompts from "./prompts.ts";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { appConfig } from "../config/index.ts";
 import {
-  Attendee,
   ConferenceEvent,
   FlightItinerary,
-  Location,
   PerplexityApiRes,
 } from "../types/index.ts";
 import stripJsonComments from "npm:strip-json-comments";
-import { DateTime } from "luxon";
+import { DateTime } from "npm:luxon";
 
 export const perplexityApiInst = (apiKey: string) => {
   const apiInst = axios.create({
@@ -26,17 +24,19 @@ export const perplexityApiInst = (apiKey: string) => {
 
 export const fetchFlightSchedule = async (
   api: AxiosInstance,
-  eventStartDate: number,
-  venueLoc: Location,
-  attendeeLoc: Location,
-  flightArrivalTime?: DateTime, // defaults to the conference start day if none
+  venueCity: string,
+  venueCountry: string,
+  departCity: string,
+  departCountry: string,
+  flightArrivalTime: string, // ISO datetime string
 ) => {
-  const arrivalTime = flightArrivalTime || eventStartDate;
 
   const newReq = llmPrompts.fetchFlightsApiPayload(
-    venueLoc,
-    attendeeLoc,
-    arrivalTime,
+    venueCity,
+    venueCountry,
+    departCity,
+    departCountry,
+    flightArrivalTime,
   );
 
   try {
@@ -103,18 +103,21 @@ export const fetchFlightSchedule = async (
 export const fetchConferenceList = async (
   api: AxiosInstance,
   eventTags: string,
-  location: Location,
-  when: DateTime = DateTime.now(),
+  country: string,
+  city: string,
+  when: string = (new Date()).toISOString(),
 ) => {
   if (!eventTags) {
     throw new Error("No event tag was provided");
   }
-  if (!location) {
-    throw new Error("No event location was provided");
-  }
 
   // create a prompt for the LLM
-  const newReq = llmPrompts.fetchEventsApiPayload(eventTags, location, when);
+  const newReq = llmPrompts.fetchEventsApiPayload(
+    eventTags,
+    country,
+    city,
+    when,
+  );
 
   console.log(`Sending the following request\n${JSON.stringify(newReq)}`);
   try {
