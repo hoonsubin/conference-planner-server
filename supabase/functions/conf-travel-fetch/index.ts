@@ -14,9 +14,13 @@ import {
 
 Deno.serve(async (req) => {
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*", //todo: change to the app's deploy domain
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Origin": "*", // todo: Restrict in production
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Max-Age": "86400", // 24-hour preflight cache
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
   };
 
   try {
@@ -66,10 +70,13 @@ Deno.serve(async (req) => {
           validatedFlightReq.fromWhen, // ISO 8601
         );
 
-        return new Response(JSON.stringify({ success: true, data: flightListRes }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ success: true, data: flightListRes }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       } else {
         return new Response(
           JSON.stringify({ error: `Unknown request for ${endpoint}` }),
